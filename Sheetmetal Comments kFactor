@@ -1,0 +1,44 @@
+Sub Main
+Dim oDoc As Document
+oDoc = ThisDoc.Document
+'Declare the ID for Sheetmetal
+Const CLSID_InventorSheetMetalPart_RegGUID = "{9C464203-9BAE-11D3-8BAD-0060B0CE6BB4}"
+
+'check if Document type is part
+If oDoc.DocumentType <> Inventor.DocumentTypeEnum.kPartDocumentObject Then Exit Sub
+
+'Here is a list of all of the the DocumentType enumerators available in the API:
+'kUnknownDocumentObject
+'kPartDocumentObject
+'kAssemblyDocumentObject
+'kDrawingDocumentObject
+'kPresentationDocumentObject
+'kDesignElementDocumentObject
+'kForeignModelDocumentObject
+'kSATFileDocumentObject
+'kNoDocument
+
+'check If part Is SheetMetal
+If oDoc.SubType = CLSID_InventorSheetMetalPart_RegGUID Then
+	
+	oCompDef = ThisDoc.Document.ComponentDefinition
+
+      kFac = oCompDef.UnfoldMethod.kFactor
+            iProperties.Value(“Custom”, “kFac”) = kFac
+			
+	  Width = Round(SheetMetal.FlatExtentsWidth, 1)
+	  		 iProperties.Value(“Custom”, “Width”) = Width
+	
+	  Length = Round(SheetMetal.FlatExtentsLength, 1)
+	  		 iProperties.Value(“Custom”, “Length”) = Length
+
+iProperties.Value("Summary", "Comments") =
+	"K FACTOR = " & iProperties.Value("Custom", "kFac")
+	
+iProperties.Value("Custom", "G_L") =
+	iProperties.Value("Custom", "Length")
+
+End If
+
+'Endoffile:
+End Sub
