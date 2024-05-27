@@ -1,0 +1,1 @@
+If ThisDoc.Document.Update2(True) Then ThisApplication.CommandManager.ControlDefinitions.Item("AppUpdateMassPropertiesCmd").Execute2(True)
