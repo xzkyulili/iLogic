@@ -1,0 +1,4 @@
+iProperties.Value("Custom", "G_L")=Round(Measure.ExtentsLength,1)
+iProperties.Value("Custom", "Width")=Round(Measure.ExtentsWidth,1)
+iProperties.Value("Custom", "Height")=Round(Measure.ExtentsHeight,1)
+'iProperties.Value("Custom", "Dimensions")=CStr(Round(Measure.ExtentsLength,2))+" X "+CStr(Round(Measure.ExtentsWidth,2))+" X "+CStr(Round(Measure.ExtentsHeight,2))
