@@ -1,0 +1,34 @@
+Sub Main
+'iLogic code by @ClintBrown3D - UNOFFICIAL INVENTOR BLOG
+'Originally posted at: https://clintbrown.co.uk/assembly-surface-areas-For-paint-Or-coatings
+
+'check if Document type is part
+'If oDoc.Type <> ContentCenterPart Then Exit Sub
+'If oOccurrence.Type <> ContentCenterPart
+'Dim partDoc As PartDocument
+'partDoc = ThisApplication.ActiveDocument
+Dim partDoc As Document
+partDoc = ThisDoc.Document
+
+Dim oDef As PartComponentDefinition
+oDef = partDoc.ComponentDefinition
+
+If Not partDoc.Type = ContentCenterPart Then
+
+'Get Vaules from the temporary file
+	'ThisApplication.SilentOperation = False
+	Dim oModel As PartDocument
+	'oModel = ThisApplication.ActiveDocument
+	oModel = ThisDoc.Document
+	oArea = oModel.ComponentDefinition.MassProperties.Area
+
+'Write the temporary value to iProperties
+	iProperties.Value("Custom", "PaintAREA cm") = Round(oArea, 1) & " cm^2"
+	iProperties.Value("Custom", "PaintAREA mm") = Round(oArea * 100, 1) & " mm^2"
+	iProperties.Value("Custom", "PaintAREA m") = Round(oArea / 10000, 2) & " m^2"
+	iProperties.Value("Custom", "Assembly Area") = iProperties.Area
+
+'MessageBox.Show("Success!" & vbNewLine & vbNewLine &"Paint Area = " & iProperties.Value("Custom", "PaintAREA cm")  & vbNewLine & vbNewLine & "This has been written to PaintArea under Custom iProperties", "@ClintBrown3D")
+End If
+
+End Sub
