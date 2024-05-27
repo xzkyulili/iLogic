@@ -1,0 +1,86 @@
+Public Sub Main
+
+Dim oAsmCompDef As AssemblyComponentDefinition
+oAsmCompDef = ThisApplication.ActiveDocument.ComponentDefinition
+
+ Dim oDoc As AssemblyDocument
+    oDoc = ThisApplication.ActiveDocument
+    
+    ' Set a reference to the BOM
+    Dim oBOM As BOM
+    oBOM = oDoc.ComponentDefinition.BOM
+    
+    oBOM.StructuredViewFirstLevelOnly = False
+    oBOM.StructuredViewEnabled = False
+	oBOM.PartsOnlyViewEnabled = True
+
+    'Set a reference to the "Parts Only" BOMView
+    Dim oBOMView As BOMView = oBOM.BOMViews.Item(oBOM.BOMViews.Count)
+    oBOMView = oBOM.BOMViews.Item("Parts Only")
+
+'Dim oBOMView As BOMView = oBOM.BOMViews.Item(oBOM.BOMViews.Count)
+'For Each oRow As BOMRow In oBOMView.BOMRows
+
+
+'Iterate through all of the occurrences
+Dim oOccurrence As ComponentOccurrence
+Dim oItem As ComponentOccurrence
+For Each oOccurrence In oAsmCompDef.Occurrences.AllReferencedOccurrences(oAsmCompDef)
+	'For Each oRow In oBOMView.
+		
+	Try
+	If Not oOccurrence.Type = ContentCenterPart Then Continue For
+	If oOccurrence.Type = kPartDocumentObject Then Continue For
+	'If Not oItem.Type = ContentCenterPart Then Continue For
+	If oItem.Type = kPartDocumentObject Then Continue For
+	
+	
+	
+	'get the units of measure
+   	Dim oUOM As UnitsOfMeasure
+    'oUOM = oOccurrence.Definition.Document.UnitsOfMeasure
+	oUOM = oItem.Definition.Document.UnitsOfMeasure
+
+
+	'check for and skip virtual components
+	'(in case a virtual component trips things up)
+	'If Not TypeOf oOccurrence.Definition Is VirtualComponentDefinition Then
+	If Not TypeOf oItem.Definition Is VirtualComponentDefinition Then
+
+
+Dim oModel As PartDocument
+	'oModel = oOccurrence.Definition.Document.ActiveDocument
+	oModel = oItem.Definition.Document.ActiveDocument
+	oArea = oModel.ComponentDefinition.MassProperties.Area
+
+'Write the temporary value to iProperties
+	iProperties.Value("Custom", "PaintAREA cm") = Round(oArea, 1) & " cm^2"
+	iProperties.Value("Custom", "PaintAREA mm") = Round(oArea * 100, 1) & " mm^2"
+	iProperties.Value("Custom", "PaintAREA m") = Round(oArea / 10000, 1) & " m^2"
+	iProperties.Value("Custom", "Assembly Area") = iProperties.Area
+
+
+
+
+
+
+
+	'Convert the Area to the current document units.
+'		Dim surfaceArea As Decimal
+'		surfaceArea = iProperties.AreaOfComponent(oOccurrence.Name)
+		' Convert the Area to the current document units.
+ '  		Dim strArea As Double
+  '  	strArea = surfaceArea
+
+'Write the temporary value to iProperties
+'	iProperties.Value(oOccurrence.Name,"Custom", "PaintAREA cm") = Round(strArea / 10000, 2) & " cm^2"
+'	iProperties.Value(oOccurrence.Name,"Custom", "PaintAREA mm") = Round(strArea, 2) & " mm^2"
+'	iProperties.Value(oOccurrence.Name,"Custom", "PaintAREA m") = Round(strArea / 1000000, 2) & " m^2"
+'	iProperties.Value(oOccurrence.Name,"Custom", "Assembly Area") = iProperties.Area
+End If
+Finally
+End Try
+
+Next
+'MessageBox.Show("Success!" & vbNewLine & vbNewLine &"Paint Area = " & iProperties.Value("Custom", "PaintAREA cm")  & vbNewLine & vbNewLine & "This has been written to PaintArea under Custom iProperties", "@ClintBrown3D")
+End Sub
