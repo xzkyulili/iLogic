@@ -1,0 +1,99 @@
+'iLogic code by @ClintBrown3D - UNOFFICIAL INVENTOR BLOG
+'Originally posted at: https://clintbrown.co.uk/assembly-surface-areas-For-paint-Or-coatings
+
+Dim oDoc As AssemblyDocument
+oDoc = ThisApplication.ActiveDocument
+Dim oDef As AssemblyComponentDefinition
+oDef = oDoc.ComponentDefinition
+
+Try
+'Set the LOD to Master"
+	Dim doc As AssemblyDocument = ThisDoc.Document
+	Dim oLOD As LevelOfDetailRepresentation
+	Dim oAsmCompDef As ComponentDefinition
+	oAsmCompDef = doc.ComponentDefinition
+	oLOD = oAsmCompDef.RepresentationsManager.LevelOfDetailRepresentations.Item("Master")
+	oLOD.Activate(True)
+Catch
+	MsgBox("Could Not Set LOD")
+End Try
+
+' Create a new part document that will be the shrinkwrap substitute
+	Dim oPartDoc As PartDocument
+	oPartDoc = ThisApplication.Documents.Add(kPartDocumentObject, , False)
+
+	Dim oPartDef As PartComponentDefinition
+	oPartDef = oPartDoc.ComponentDefinition
+
+	Dim oDerivedAssemblyDef As DerivedAssemblyDefinition
+	oDerivedAssemblyDef = oPartDef.ReferenceComponents.DerivedAssemblyComponents.CreateDefinition(oDoc.FullDocumentName)
+
+' Set various shrinkwrap related options
+	oDerivedAssemblyDef.DeriveStyle = 80642 '"kDeriveAsSingleBodyNoSeams"
+	oDerivedAssemblyDef.IncludeAllTopLevelWorkFeatures = 27137 '"kDerivedIncludeAll"
+	oDerivedAssemblyDef.IncludeAllTopLevelSketches = 27137 '"kDerivedIncludeAll"
+	oDerivedAssemblyDef.IncludeAllTopLeveliMateDefinitions = 27138'"kDerivedExcludeAll"
+	oDerivedAssemblyDef.IncludeAllTopLevelParameters = 27138'"kDerivedExcludeAll"
+	oDerivedAssemblyDef.ReducedMemoryMode = True
+
+'Set Hole Patching
+	HolePatcher = 88321  '(88323 = Range) (88322 = All) (88321 = None) ***********************************************************************************************************
+	MinimumPerimeter = 0.1
+	MaximumPerimeter = 5
+	Call oDerivedAssemblyDef.SetHolePatchingOptions(HolePatcher, MinimumPerimeter, MaximumPerimeter)
+
+' Name the TEMP part
+	Dim strSubstituteFileName As String
+	oTime = Now.ToFileTime' .ToShortTimeString
+	strSubstituteFileName = "C:\Temp\DeleteMe" & oTime & ".ipt"
+
+Call oDerivedAssemblyDef.SetRemoveByVisibilityOptions(88579, 25)'(kDerivedRemovePartsAndFaces, 25)
+
+' Create the shrinkwrap component
+	Dim oDerivedAssembly As DerivedAssemblyComponent
+	oDerivedAssembly = oPartDef.ReferenceComponents.DerivedAssemblyComponents.Add(oDerivedAssemblyDef)
+
+	' Save the TEMP part
+	ThisApplication.SilentOperation = True 
+	Call oPartDoc.SaveAs(strSubstituteFileName, True)
+	ThisApplication.SilentOperation = True
+
+' Create a substitute level of detail using the shrinkwrap part.
+	'Dim oSubstituteLOD As LevelOfDetailRepresentation
+	'oSubstituteLOD = oDef.RepresentationsManager.LevelOfDetailRepresentations.AddSubstitute(strSubstituteFileName)
+	'oSubstituteLOD.Name = "@ClintBrown3D"
+
+'Set LOD back to Master
+	'Dim doc1 As AssemblyDocument = ThisDoc.Document
+	'Dim oLOD1 As LevelOfDetailRepresentation
+	'Dim oAsmCompDef1 As ComponentDefinition
+	'oAsmCompDef1 = doc1.ComponentDefinition
+	'oLOD1 = oAsmCompDef1.RepresentationsManager.LevelOfDetailRepresentations.Item("Master")
+	'oLOD1.Activate(True)
+
+'Get Vaules from the temporary file
+	ThisApplication.SilentOperation = False
+	Dim oModel As PartDocument
+	aFilePath = strSubstituteFileName
+	oModel = ThisApplication.Documents.Open(aFilePath, False)
+	oArea = oModel.ComponentDefinition.MassProperties.Area
+
+'Write the temporary value to iProperties
+	iProperties.Value("Custom", "PaintAREA cm") = Round(oArea, 1) & " cm^2"
+	iProperties.Value("Custom", "PaintAREA mm") = Round(oArea * 100, 1) & " mm^2"
+	iProperties.Value("Custom", "PaintAREA m") = Round(oArea / 10000, 1) & " m^2"
+	iProperties.Value("Custom", "Assembly Area") = iProperties.Area
+
+'Delete Temp LOD
+	'oSubstituteLOD.Delete
+
+ 'Delete Temporary shrinkwrap file
+Try
+	If System.IO.File.Exists(strSubstituteFileName) Then
+	My.Computer.FileSystem.DeleteFile(strSubstituteFileName)
+End If
+Catch
+	MsgBox("Could Not Delete Temp File")
+End Try
+
+MessageBox.Show("Success!" & vbNewLine & vbNewLine &"Paint Area = " & iProperties.Value("Custom", "PaintAREA cm")  & vbNewLine & vbNewLine & "This has been written to PaintArea under Custom iProperties", "@ClintBrown3D")
