@@ -1,0 +1,13 @@
+If ThisDoc.Document.Update2(True) Then
+' get the filename without extension
+oFileName = ThisDoc.FileName(False)  
+'Set your delimiter
+Delimiter = InStr (oFileName, "-")
+
+'Description = Left(oFileName, Delimiter -1)
+Sp_No = Right(oFileName, Len(oFileName)) ' - Len(Description) -1)
+
+'update all
+iLogicVb.UpdateWhenDone = True
+
+End If
