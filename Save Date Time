@@ -1,0 +1,8 @@
+'Try ' Start the test for the custom field
+ ' oSaveDate = iProperties.Value("Custom", "Savedate")
+'Catch ' If it does not exist then continue, else go to the "END TRY" section
+'iProperties.Value("Custom", "Savedate") = DateTime.Now.ToString("d")
+'iProperties.Value("Custom", "SaveTime")=Now.ToString("HH:mm:ss")
+'End Try
+iProperties.Value("Custom", "Savedate") = DateTime.Now.ToString("d")
+iProperties.Value("Custom", "SaveTime")=Now.ToString("HH:mm:ss")
