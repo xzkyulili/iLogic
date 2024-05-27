@@ -1,0 +1,69 @@
+Sub Main
+    Dim oAsmDoc As AssemblyDocument
+    oAsmDoc = ThisApplication.ActiveDocument
+	oAsmName = ThisDoc.FileName(False) 'without extension
+
+    If oAsmDoc.DocumentType <> kAssemblyDocumentObject Then
+        MessageBox.Show("This is not an assembly document.")
+        Return
+    End If
+
+	'Sub ExportToOBJ(oDoc) As Inventor.Document)
+	Dim oApp As Inventor.Application = ThisApplication
+	Dim oDoc As Document = oApp.ActiveDocument
+	Dim oOBJ As TranslatorAddIn
+	For Each oAppAddin As ApplicationAddIn In oApp.ApplicationAddIns
+		If oAppAddin.DisplayName = "Translator: OBJ Export" Then
+			oOBJ = oAppAddin
+		End If
+	Next
+
+	'The following lines create the needed input variables
+	Dim oTO As TransientObjects = oApp.TransientObjects
+	Dim oContext As TranslationContext = oTO.CreateTranslationContext
+	oContext.Type = IOMechanismEnum.kFileBrowseIOMechanism
+	Dim oOptions As NameValueMap = oTO.CreateNameValueMap
+	Dim oDataMedium As DataMedium = oTO.CreateDataMedium
+
+	'set these options the way you want them here
+	oOptions.Value("ExportUnits") = 0 '(I assume 0 is 'Source Units' in the dialog)
+	oOptions.Value("Resolution") = 0 '(I believe 1 = High, and 4 = Brep in the dialog)
+	oOptions.Value("SurfaceDeviation") = 4 '(I assume 16 is default in dialog)
+	oOptions.Value("NormalDeviation") = 1500 '(I assume 1500 is default in dialog)
+	oOptions.Value("MaxEdgeLength") = 100000 '(I assume 100000 is default in dialog)
+	oOptions.Value("AspectRatio") = 2150 '(represents 21.5 in the dialog - default setting)
+	oOptions.Value("ExportFileStructure") = 0 '(I assume 0 is 'One File' in the dialog)
+
+
+    ' Access the BOM and set to Parts Only View
+    Dim oBOM As BOM = oAsmDoc.ComponentDefinition.BOM
+    oBOM.PartsOnlyViewEnabled = True
+    Dim oBOMView As BOMView = oBOM.BOMViews.Item("Parts Only")
+
+    ' Define the path for the OBJ export folder
+    Dim oPath As String = ThisDoc.Path
+    Dim oFolder As String = oPath & "\OBJ_Export_" & oAsmDoc.DisplayName
+    If Not System.IO.Directory.Exists(oFolder) Then
+        System.IO.Directory.CreateDirectory(oFolder)
+    End If
+
+    ' Iterate through BOM rows in the Parts Only view
+    For Each oRow In oBOMView.BOMRows
+        Dim oPartDoc As PartDocument = oRow.ComponentDefinitions.Item(1).Document
+
+        ' Check if the part is likely from the Content Center based on BOMStructure
+        If oPartDoc.ComponentDefinition.BOMStructure = BOMStructureEnum.kPurchasedBOMStructure Then
+            Continue For
+        End If
+
+        ' Set the path and file name for the OBJ file
+        Dim objFileName As String = oFolder & "\" & System.IO.Path.GetFileNameWithoutExtension(oPartDoc.FullFileName) & ".obj"
+        Dim oDataMediumb As DataMedium = ThisApplication.TransientObjects.CreateDataMedium
+        oDataMedium.FileName = objFileName
+
+        ' Export the part as an OBJ file using previously configured translator add-in
+        If oOBJ.HasSaveCopyAsOptions(oPartDoc, oContext, oOptions) Then
+            oOBJ.SaveCopyAs(oPartDoc, oContext, oOptions, oDataMedium)
+        End If
+	Next
+End Sub
