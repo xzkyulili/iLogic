@@ -1,0 +1,29 @@
+Sub Main PaintFaces()
+
+Dim oPartDoc As PartDocument
+ oPartDoc = ThisApplication.ActiveDocument
+
+
+Dim ColorName As String
+ColorName = "Default"
+Dim oRenderStyle As RenderStyle
+oRenderStyle = oPartDoc.RenderStyles.Item(ColorName)
+
+Dim oPartdef As PartComponentDefinition
+oPartdef = oPartDoc.ComponentDefinition
+
+' declaring objects to use in loop
+Dim oSurface As WorkSurface
+Dim oFace As SurfaceBody
+
+ 
+
+' cycling through all faces
+For Each oSurface In oPartdef.WorkSurfaces
+    For Each oFace In oSurface.SurfaceBodies
+    Call oFace.SetRenderStyle(kOverrideRenderStyle, oRenderStyle)
+    Next
+Next
+
+
+End Sub
