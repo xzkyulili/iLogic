@@ -1,0 +1,76 @@
+Dim oDoc As AssemblyDocument
+oDoc = ThisApplication.ActiveDocument
+Dim oAsmDoc As AssemblyDocument
+oAsmDoc = ThisApplication.ActiveDocument
+oAsmName = ThisDoc.FileName(False) 'without extension
+
+'Check that the active document is an assembly file
+If oDoc.DocumentType <> kAssemblyDocumentObject Then
+	MessageBox.Show("Proszę, uruchom tą regułę w pliku złożenia.", "iLogic")
+	Exit Sub
+End If
+
+'Get user input
+RUsure = MessageBox.Show ( _
+"This will create a DXF file for all of the assembly components that are sheet metal." _
+& vbLf & "This rule expects that the part file is saved." _
+& vbLf & " " _
+& vbLf & "Are you sure you want to create DXF for all of the assembly components?" _
+& vbLf & "This could take a while.", "iLogic  - Batch Output DXFs ", MessageBoxButtons.YesNo)
+
+If RUsure <> vbYes Then Exit Sub
+
+Dim oPath As String = ThisDoc.Path
+
+'Get the DXF target folder path
+Dim oFolder As String = oPath & "\" & oAsmName & " DXF Files"
+
+'Check for the DXF folder and create it if it does not exist
+If Not System.IO.Directory.Exists(oFolder) Then
+    System.IO.Directory.CreateDirectory(oFolder)
+End If
+
+'- - - - - - - - - - - - -Component  - - - - - - - - - - - -
+'MessageBox.Show("Test", "My iLogic Dialog", MessageBoxButtons.OK, MessageBoxIcon.Hand, MessageBoxDefaultButton.Button1)
+Dim oBOM As BOM
+'MessageBox.Show("Test", "My iLogic Dialog", MessageBoxButtons.OK, MessageBoxIcon.Hand, MessageBoxDefaultButton.Button1)
+oBOM = oDoc.ComponentDefinition.BOM
+'MessageBox.Show("Test", "My iLogic Dialog", MessageBoxButtons.OK, MessageBoxIcon.Hand, MessageBoxDefaultButton.Button1)
+
+oBOM.StructuredViewEnabled = True
+Dim oBOMView As BOMView = oBOM.BOMViews.Item(oBOM.BOMViews.Count)
+For Each oRow As BOMRow In oBOMView.BOMRows
+Try
+	Dim oCD As ComponentDefinition = oRow.ComponentDefinitions.Item(1)
+	Dim iDoc As Document = oCD.Document
+	'SheetMetal parts only
+	If iDoc.SubType <> "{9C464203-9BAE-11D3-8BAD-0060B0CE6BB4}" Then Continue For
+	Dim iName As String = iDoc.FullFileName
+
+	'Check that model is saved
+	If iName = vbNullString Then Continue For
+	iDoc = ThisApplication.Documents.Open(iName)
+	oCD = iDoc.ComponentDefinition
+	
+	Dim oItem As String = oRow.ItemNumber
+	Try
+		If Not oCD.HasFlatPattern Then
+			oCD.Unfold()
+		Else
+			oCD.FlatPattern.Edit()
+		End If
+
+		Dim sOut As String = "FLAT PATTERN DXF?AcadVersion=2004&OuterProfileLayer=IV_OUTER_PROFILE&InvisibleLayers=IV_TANGENT;"
+		'Dim ShortName As String = Left(iDoc.DisplayName, (InStrRev(iDoc.DisplayName, ".", -1, vbTextCompare) - 1)) & ".dxf"
+		Dim ShortName As String =iProperties.Value(iDoc.DisplayName,"Project", "Part Number") & "_" & iProperties.Value(iDoc.DisplayName,"Project", "Revision Number") & ".dxf"
+		'iProperties.Value("part1:1", "Project", "Part Number")
+		
+		oCD.DataIO.WriteDataToFile(sOut, oFolder & "\" & ShortName)
+		oCD.FlatPattern.ExitEdit()
+	Catch ex As Exception
+		MsgBox(ex.Message)
+	End Try
+	iDoc.Close(True)
+Catch
+End Try
+Next 
