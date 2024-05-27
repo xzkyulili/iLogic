@@ -1,0 +1,28 @@
+Sub Main param_delete()
+
+
+Dim partDoc As PartDocument
+partDoc = ThisApplication.ActiveDocument
+
+Dim MyArrayList As New ArrayList
+MyArrayList.Add("G_L")
+MyArrayList.Add("G_")
+
+Dim Params As Parameters
+Params = ThisApplication.ActiveDocument.ComponentDefinition.Parameters
+
+'define custom property collection
+Dim oParam1 As Parameter
+'look at each property in the collection
+For Each oParam1 In Params
+'check property name against the list you want to delete
+If MyArrayList.Contains(oParam1.Name)Then
+'delete the custom iProperty
+oParam1.delete
+Else
+'skip it
+End If
+Next
+
+
+End Sub
