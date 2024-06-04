@@ -1,0 +1,1 @@
+This repository is just a list of iLogic scripts I've compiled or obtained from the web. I think there's one or two that don't function correctly, so if you have an issue please leave a comment. If you solve it, even better! haha.
